@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="default_rate">0</string>
+    <string name="default_review">0 Reviewed!</string>
+
+    <string name="default_range_5">5</string>
+    <string name="default_range_4">4</string>
+    <string name="default_range_3">3</string>
+    <string name="default_range_2">2</string>
+    <string name="default_range_1">1</string>
+
+    <attr name="ratingBarBackground" format="color"/>
+
+    <style name="Widget.Farsoidx.RatingView" parent="">
+        <item name="ratingBarBackground">#ffffff</item>
+    </style>
+
+    <declare-styleable name="RatingView">
+
+    </declare-styleable>
+
+</resources>
