@@ -1,22 +1,26 @@
 package ir.farsroidx
 
 import android.content.Context
+import android.content.res.TypedArray
+import android.os.Bundle
+import android.os.Parcelable
 import android.util.AttributeSet
-import android.util.Log
 import android.view.View
-import android.view.animation.AccelerateInterpolator
+import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
+import android.widget.FrameLayout
+import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.AppCompatRatingBar
 import androidx.appcompat.widget.AppCompatTextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.ContentLoadingProgressBar
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import kotlin.math.pow
 
-class RatingView : ConstraintLayout {
+class RatingView : FrameLayout {
 
     private lateinit var mView: View
+    private lateinit var mTypedArray: TypedArray
 
     private lateinit var mPrg1: ContentLoadingProgressBar
     private lateinit var mPrg2: ContentLoadingProgressBar
@@ -27,33 +31,39 @@ class RatingView : ConstraintLayout {
     private lateinit var mTextReview: AppCompatTextView
     private lateinit var mRatingBar: AppCompatRatingBar
 
+    private var mLayoutMode = 0
+    private var mReviewText: String? = ""
+
     private var mEventController = EventController.getDefault()
 
     private val mReviewList = mutableListOf<Int>()
     private var mProgressAnimation = ProgressAnimation()
 
+    private var onRateChange: OnRateChange? = null
+
+    private var mFinalRate: Float = 0f
+
     companion object {
         private const val ADDED_REVIEW_KEY = "addedReview"
         private const val ADDED_REVIEWS_KEY = "addedReviews"
+
+        private const val MODE_RTL = 0
+        private const val MODE_LTR = 1
     }
 
-    constructor(context: Context?) : super(context) {
-        initial(context)
-    }
+    constructor(context: Context) :
+            this(context, null, 0)
 
-    constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs) {
-        initial(context, attrs)
-    }
+    constructor(context: Context, attrs: AttributeSet?) :
+            this(context, attrs, 0)
 
-    constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) :
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
             super(context, attrs, defStyleAttr) {
         initial(context, attrs, defStyleAttr)
     }
 
-    private fun initial(context: Context?, attrs: AttributeSet? = null, defStyleAttr: Int = 0, defStyleRes: Int = 0){
-
-        mView = attachingView(context)
-        bindViews(mView)
+    private fun initial(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int = 0){
+        initialAttributes(context, attrs, defStyleAttr, defStyleRes)
 
         mEventController.addObserver<Review>(this, ADDED_REVIEW_KEY){
             mReviewList.add(getReview(it))
@@ -66,8 +76,40 @@ class RatingView : ConstraintLayout {
         }
     }
 
-    private fun attachingView(context: Context?): View {
-        return View.inflate(context, R.layout.inflate_rating_view, this)
+    private fun initialAttributes(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int = 0){
+        attachingView(context)
+        attrs?.let {
+            mTypedArray = context.theme!!
+                .obtainStyledAttributes(
+                    attrs , R.styleable.RatingView, defStyleAttr, defStyleRes
+                )
+            mLayoutMode = mTypedArray.getColor(R.styleable.RatingView_ratingBarMode , MODE_LTR)
+            mReviewText = mTypedArray.getString(R.styleable.RatingView_ratingReviewText)
+            mTypedArray.recycle()
+
+            addModeView(getLayout(mLayoutMode))
+
+            if (mReviewText == null){
+                mReviewText = context.resources.getString(R.string.default_review)
+            }
+
+            mTextReview.text = mReviewText?.replace("#" , 0.toString())
+        }
+    }
+
+    private fun attachingView(context: Context) {
+        mView = inflate(context, R.layout.inflate_rating_view, this)
+    }
+
+    private fun addModeView(layout: View){
+        this.removeAllViews()
+        this.addView(layout)
+        this.bindViews(layout)
+    }
+
+    private fun getLayout(mode: Int): View {
+        if (mode == MODE_RTL) return inflate(R.layout.inflate_rating_view_rtl, null)
+        return inflate(R.layout.inflate_rating_view_ltr, null)
     }
 
     private fun bindViews(view: View){
@@ -125,9 +167,13 @@ class RatingView : ConstraintLayout {
         mProgressAnimation.setProgress1(mPrg1, mPrg1.progress, (mTotalReview1 * 100) / mTotalPoint)
 
         val mRate = ((mTotalReview / mTotalReviewCount) * 10.0.pow(1.0)).toInt() / 10.0.pow(1.0).toFloat()
+        mFinalRate = mRate
+
+        onRateChange?.onChange(mRate, mTotalReviewCount, mTotalPoint)
+
         mRatingBar.rating = mRate
         mTextRate.text = "$mRate"
-        mTextReview.text = "$mTotalReviewCount Reviewed!"
+        mTextReview.text = mReviewText?.replace("#" , mTotalReviewCount.toString())
 
         mView.requestLayout()
         mView.startAnimation(mProgressAnimation)
@@ -149,6 +195,18 @@ class RatingView : ConstraintLayout {
 
     fun addReview(reviews: List<Int>){
         mEventController.post(ADDED_REVIEWS_KEY, reviews)
+    }
+
+    fun getRate(): Float {
+        return mFinalRate
+    }
+
+    fun getAllReviewsCont(): Int {
+        return mReviewList.size
+    }
+
+    fun setOnRateChange(onRateChange: OnRateChange) {
+        this.onRateChange = onRateChange
     }
 
     inner class ProgressAnimation : Animation() {
@@ -236,5 +294,27 @@ class RatingView : ConstraintLayout {
                 progressBar1?.progress = value.toInt()
             }
         }
+    }
+
+    interface OnRateChange {
+        fun onChange(rate: Float, totalReviewCount: Int, totalPoint: Int)
+    }
+
+    private fun View.inflate(@LayoutRes resource: Int, viewGroup: ViewGroup?): View {
+        return inflate(this.context, resource, viewGroup)
+    }
+
+    override fun onSaveInstanceState(): Parcelable? {
+        val bundle = Bundle()
+        bundle.putParcelable("instanceState", super.onSaveInstanceState())
+        return bundle
+    }
+
+    override fun onRestoreInstanceState(state: Parcelable?) {
+        if (state is Bundle) {
+            super.onRestoreInstanceState(state.getParcelable("instanceState"))
+            return
+        }
+        super.onRestoreInstanceState(state)
     }
 }
