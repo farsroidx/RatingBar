@@ -5,12 +5,11 @@ import android.content.res.TypedArray
 import android.os.Bundle
 import android.os.Parcelable
 import android.util.AttributeSet
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.Transformation
 import android.widget.FrameLayout
-import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.AppCompatRatingBar
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.widget.ContentLoadingProgressBar
@@ -19,8 +18,12 @@ import kotlin.math.pow
 
 class RatingView : FrameLayout {
 
+    private lateinit var mLayoutInflater: LayoutInflater
+
     private lateinit var mView: View
     private lateinit var mTypedArray: TypedArray
+
+    private lateinit var mBaseRoot: FrameLayout
 
     private lateinit var mPrg1: ContentLoadingProgressBar
     private lateinit var mPrg2: ContentLoadingProgressBar
@@ -41,7 +44,13 @@ class RatingView : FrameLayout {
 
     private var onRateChange: OnRateChange? = null
 
-    private var mFinalRate: Float = 0f
+    private var mFinalRate = 0f
+    private var mTotalReview = 0f
+    private var mTotalReview5 = 0
+    private var mTotalReview4 = 0
+    private var mTotalReview3 = 0
+    private var mTotalReview2 = 0
+    private var mTotalReview1 = 0
 
     companion object {
         private const val ADDED_REVIEW_KEY = "addedReview"
@@ -78,12 +87,16 @@ class RatingView : FrameLayout {
 
     private fun initialAttributes(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int = 0){
         attachingView(context)
+
+        mLayoutInflater = context.getSystemService(Context.LAYOUT_INFLATER_SERVICE)
+                as LayoutInflater
+
         attrs?.let {
             mTypedArray = context.theme!!
                 .obtainStyledAttributes(
                     attrs , R.styleable.RatingView, defStyleAttr, defStyleRes
                 )
-            mLayoutMode = mTypedArray.getColor(R.styleable.RatingView_ratingBarMode , MODE_LTR)
+            mLayoutMode = mTypedArray.getInt(R.styleable.RatingView_ratingBarMode , MODE_LTR)
             mReviewText = mTypedArray.getString(R.styleable.RatingView_ratingReviewText)
             mTypedArray.recycle()
 
@@ -99,17 +112,22 @@ class RatingView : FrameLayout {
 
     private fun attachingView(context: Context) {
         mView = inflate(context, R.layout.inflate_rating_view, this)
+        mBaseRoot = mView.findViewById(R.id.mBaseRoot)
     }
 
     private fun addModeView(layout: View){
-        this.removeAllViews()
-        this.addView(layout)
-        this.bindViews(layout)
+        mBaseRoot.removeAllViews()
+        mBaseRoot.addView(layout)
+        bindViews(layout)
     }
 
     private fun getLayout(mode: Int): View {
-        if (mode == MODE_RTL) return inflate(R.layout.inflate_rating_view_rtl, null)
-        return inflate(R.layout.inflate_rating_view_ltr, null)
+        if (mode == MODE_RTL) return mLayoutInflater.inflate(
+            R.layout.inflate_rating_view_rtl, mBaseRoot , false
+        )
+        return mLayoutInflater.inflate(
+            R.layout.inflate_rating_view_ltr, mBaseRoot, false
+        )
     }
 
     private fun bindViews(view: View){
@@ -126,12 +144,6 @@ class RatingView : FrameLayout {
     private fun syncData(){
 
         val mTotalReviewCount = mReviewList.size
-        var mTotalReview = 0f
-        var mTotalReview5 = 0
-        var mTotalReview4 = 0
-        var mTotalReview3 = 0
-        var mTotalReview2 = 0
-        var mTotalReview1 = 0
 
         for (i in 0 until mReviewList.size) {
             when {
@@ -158,7 +170,12 @@ class RatingView : FrameLayout {
             }
         }
 
-        val mTotalPoint = mTotalReview5 + mTotalReview4 + mTotalReview3 + mTotalReview2 + mTotalReview1
+        val mTotalPoint =
+                mTotalReview5 +
+                    mTotalReview4 +
+                        mTotalReview3 +
+                            mTotalReview2 +
+                                mTotalReview1
 
         mProgressAnimation.setProgress5(mPrg5, mPrg5.progress, (mTotalReview5 * 100) / mTotalPoint)
         mProgressAnimation.setProgress4(mPrg4, mPrg4.progress, (mTotalReview4 * 100) / mTotalPoint)
@@ -209,7 +226,11 @@ class RatingView : FrameLayout {
         this.onRateChange = onRateChange
     }
 
-    inner class ProgressAnimation : Animation() {
+    interface OnRateChange {
+        fun onChange(rate: Float, totalReviewCount: Int, totalPoint: Int)
+    }
+
+    private inner class ProgressAnimation : Animation() {
 
         private var progressBar5: ContentLoadingProgressBar? = null
         private var from5 = 0
@@ -294,14 +315,6 @@ class RatingView : FrameLayout {
                 progressBar1?.progress = value.toInt()
             }
         }
-    }
-
-    interface OnRateChange {
-        fun onChange(rate: Float, totalReviewCount: Int, totalPoint: Int)
-    }
-
-    private fun View.inflate(@LayoutRes resource: Int, viewGroup: ViewGroup?): View {
-        return inflate(this.context, resource, viewGroup)
     }
 
     override fun onSaveInstanceState(): Parcelable? {

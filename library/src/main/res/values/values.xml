@@ -15,8 +15,8 @@
     <color name="default_review_text_color">#888888</color>
 
     <declare-styleable name="RatingView">
-        <attr name="ratingBarBackground" format="color|reference"/>
-        <attr name="ratingTextColor" format="color|reference"/>
+<!--        <attr name="ratingBarBackground" format="color|reference"/>-->
+<!--        <attr name="ratingTextColor" format="color|reference"/>-->
         <attr name="ratingReviewText" format="string|reference"/>
         <attr name="ratingBarMode" format="enum">
             <enum name="rtl" value="0"/>
