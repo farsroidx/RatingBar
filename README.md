@@ -1,5 +1,12 @@
 # Android Awesome RatingBar
 
+<p align="center">
+  <img src="/img/rtl.jpg" width="350" height="758" title="RTL Mode">
+  <img src="/img/ltr.jpg" width="350" height="758" title="LTR Mode">
+</p>
+
+## [DEMO Video](/img/demo.mp4)
+
 ## Usage version : [![](https://jitpack.io/v/farsroidx/RatingBar.svg)](https://jitpack.io/#farsroidx/RatingBar)
 
 ### Gradle
