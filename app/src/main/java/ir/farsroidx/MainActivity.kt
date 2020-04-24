@@ -10,14 +10,14 @@ import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
-   override fun onCreate(savedInstanceState: Bundle?) {
-      super.onCreate(savedInstanceState)
-      setContentView(R.layout.activity_main)
-   }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+    }
 
     fun rate(view: View) {
-        when(seekBarStar.progress){
-            0 -> Toast.makeText(this, "You can not submit 0 rate!" , Toast.LENGTH_LONG).show()
+        when (seekBarStar.progress) {
+            0 -> Toast.makeText(this, "You can not submit 0 rate!", Toast.LENGTH_LONG).show()
             1 -> ratingView.addReview(Review.STAR_1)
             2 -> ratingView.addReview(Review.STAR_2)
             3 -> ratingView.addReview(Review.STAR_3)
