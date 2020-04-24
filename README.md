@@ -40,9 +40,27 @@ dependencies {
    android:id="@+id/ratingView"
    android:layout_width="match_parent"
    android:layout_height="wrap_content"
-   android:elevation="2dp"
-   app:ratingBarMode="rtl"/>
+   app:ratingBarMode="rtl"
+   app:ratingReviewText="# Reviewed!"
+   />
 ```
+### app:ratingBarMode (enum)
+## rtl , ltr | راست چین، چپ چین
+```xml
+<ir.farsroidx.RatingView
+   app:ratingBarMode="rtl"
+   />
+```
+### app:ratingReviewText (string)
+## The number of points is replaced by # | تعداد رتبه ها با # جایگزین میشود
+```xml
+<ir.farsroidx.RatingView
+   app:ratingReviewText="# Reviewed!"
+   />
+```
+
+
+
 ### Kotlin
 ```kotlin
 // Review.STAR_5, Review.STAR_4, Review.STAR_3, Review.STAR_2 Review.STAR_1

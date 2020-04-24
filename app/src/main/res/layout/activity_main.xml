@@ -12,7 +12,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="2dp"
-        app:ratingBarMode="rtl"/>
+        app:ratingBarMode="ltr"
+        app:ratingReviewText="# Reviewed!"
+        />
 
     <LinearLayout
         android:layout_marginTop="16dp"

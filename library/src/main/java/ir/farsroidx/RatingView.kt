@@ -45,12 +45,6 @@ class RatingView : FrameLayout {
     private var onRateChange: OnRateChange? = null
 
     private var mFinalRate = 0f
-    private var mTotalReview = 0f
-    private var mTotalReview5 = 0
-    private var mTotalReview4 = 0
-    private var mTotalReview3 = 0
-    private var mTotalReview2 = 0
-    private var mTotalReview1 = 0
 
     companion object {
         private const val ADDED_REVIEW_KEY = "addedReview"
@@ -144,6 +138,12 @@ class RatingView : FrameLayout {
     private fun syncData(){
 
         val mTotalReviewCount = mReviewList.size
+        var mTotalReview = 0f
+        var mTotalReview5 = 0
+        var mTotalReview4 = 0
+        var mTotalReview3 = 0
+        var mTotalReview2 = 0
+        var mTotalReview1 = 0
 
         for (i in 0 until mReviewList.size) {
             when {
@@ -170,12 +170,7 @@ class RatingView : FrameLayout {
             }
         }
 
-        val mTotalPoint =
-                mTotalReview5 +
-                    mTotalReview4 +
-                        mTotalReview3 +
-                            mTotalReview2 +
-                                mTotalReview1
+        val mTotalPoint = mTotalReview5 + mTotalReview4 + mTotalReview3 + mTotalReview2 + mTotalReview1
 
         mProgressAnimation.setProgress5(mPrg5, mPrg5.progress, (mTotalReview5 * 100) / mTotalPoint)
         mProgressAnimation.setProgress4(mPrg4, mPrg4.progress, (mTotalReview4 * 100) / mTotalPoint)
